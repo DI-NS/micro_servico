@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: medicamento-microservico
+
+  datasource:
+    url: jdbc:postgresql://aws-0-sa-east-1.pooler.supabase.com:6543/postgres
+    driver-class-name: org.postgresql.Driver
+    username: postgres.kcznmlsdphaxfxotjits
+    password: Madmap@@021
+    initialization-mode: always
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+  liquibase:
+    enabled: false
+server:
+  port: 8080
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+jwt:
+  secret: ${JWT_SECRET:XPdF3BA71M1oV1ZkkHXVkX4FZSeC1lwX4Ltnv2HmHHA=}
+################POWER SHEL
+#  $env:JWT_SECRET="XPdF3BA71M1oV1ZkkHXVkX4FZSeC1lwX4Ltnv2HmHHA="
+#  mvn spring-boot:run
+
+#ou
+###################CMD
+#  set JWT_SECRET=XPdF3BA71M1oV1ZkkHXVkX4FZSeC1lwX4Ltnv2HmHHA=
+#  mvn spring-boot:run
