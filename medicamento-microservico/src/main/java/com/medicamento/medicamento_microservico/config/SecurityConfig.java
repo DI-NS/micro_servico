@@ -21,18 +21,19 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // Permitir acesso público ao Swagger
+                        // Permitir acesso público ao Swagger UI e documentação da API
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
-                                "/swagger-ui.html",
                                 "/swagger-resources/**",
                                 "/webjars/**",
                                 "/configuration/**"
                         ).permitAll()
-                        // Autenticação necessária para os demais endpoints
+                        // Permitir acesso público às rotas GET do Medicamento
+                        .requestMatchers("/medicamento", "/medicamento/**").permitAll()
+                        // Exigir autenticação JWT para as rotas POST, PUT e DELETE
                         .requestMatchers("/medicamento/**").authenticated()
-                        .anyRequest().denyAll()
+                        .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

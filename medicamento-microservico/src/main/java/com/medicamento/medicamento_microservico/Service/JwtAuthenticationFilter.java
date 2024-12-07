@@ -10,21 +10,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.List;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final TokenService tokenService;
-
-    private static final List<String> EXCLUDE_URLS = List.of(
-            "/swagger-ui",
-            "/swagger-ui.html",
-            "/v3/api-docs",
-            "/swagger-resources",
-            "/webjars",
-            "/configuration"
-    );
 
     public JwtAuthenticationFilter(TokenService tokenService) {
         this.tokenService = tokenService;
@@ -36,8 +26,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         String path = request.getRequestURI();
 
-        // Verifica se a URL atual está na lista de exclusão
-        if (EXCLUDE_URLS.stream().anyMatch(path::startsWith)) {
+        // Permitir acesso público às rotas GET do Medicamento e ao Swagger
+        if ((path.startsWith("/medicamento") && request.getMethod().equalsIgnoreCase("GET")) ||
+                path.startsWith("/swagger-ui") ||
+                path.startsWith("/v3/api-docs") ||
+                path.startsWith("/swagger-resources") ||
+                path.startsWith("/webjars") ||
+                path.startsWith("/configuration")) {
             filterChain.doFilter(request, response);
             return;
         }
