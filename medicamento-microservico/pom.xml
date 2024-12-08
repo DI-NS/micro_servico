@@ -124,7 +124,6 @@
 		</dependencies>
 	</dependencyManagement>
 
-	<!-- Adicionar as configurações de relatórios para Jacoco -->
 	<build>
 		<plugins>
 			<!-- Plugin Jacoco para cobertura de testes -->
@@ -167,6 +166,19 @@
 				</configuration>
 			</plugin>
 
+			<!-- Plugin para empacotar todas as dependências no JAR final -->
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<version>3.4.0</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>repackage</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 
