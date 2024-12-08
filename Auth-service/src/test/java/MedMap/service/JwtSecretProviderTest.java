@@ -1,48 +1,40 @@
 package MedMap.service;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Assertions;
 
-import java.util.Base64;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-/**
- * Testa o JwtSecretProvider garantindo que o segredo seja gerado adequadamente
- * quando não fornecido, e usado corretamente quando fornecido.
- */
 class JwtSecretProviderTest {
 
     @Test
-    void shouldUseProvidedSecret() {
-        String providedSecret = "myProvidedSecret";
-        String encoded = Base64.getEncoder().encodeToString(providedSecret.getBytes());
-        JwtSecretProvider provider = new JwtSecretProvider(encoded);
-        String secret = provider.getJwtSecret();
-        assertNotNull(secret);
-        assertEquals(encoded, secret);
+    @DisplayName("Deve retornar o segredo JWT corretamente")
+    void testGetJwtSecret() {
+        // Arrange
+        String secret = "XPdF3BA71M1oV1ZkkHXVkX4FZSeC1lwX4Ltnv2HmHHA=";
+
+        // Act
+        JwtSecretProvider jwtSecretProvider = new JwtSecretProvider(secret);
+        String returnedSecret = jwtSecretProvider.getJwtSecret();
+
+        // Assert
+        Assertions.assertEquals(secret, returnedSecret, "O segredo JWT retornado não corresponde ao esperado.");
     }
 
     @Test
-    void shouldGenerateNewSecretIfNullProvided() {
-        JwtSecretProvider provider = new JwtSecretProvider(null);
-        String secret = provider.getJwtSecret();
-        assertNotNull(secret);
-        assertFalse(secret.isBlank());
+    @DisplayName("Deve lançar exceção se o segredo JWT for nulo")
+    void testConstructorThrowsExceptionWhenSecretIsNull() {
+        // Arrange & Act & Assert
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            new JwtSecretProvider(null);
+        }, "Deveria lançar uma exceção quando o segredo JWT for nulo.");
     }
 
     @Test
-    void shouldGenerateNewSecretIfEmptyProvided() {
-        JwtSecretProvider provider = new JwtSecretProvider("");
-        String secret = provider.getJwtSecret();
-        assertNotNull(secret);
-        assertFalse(secret.isBlank());
-    }
-
-    @Test
-    void shouldGenerateNewSecretIfBlankProvided() {
-        JwtSecretProvider provider = new JwtSecretProvider("   ");
-        String secret = provider.getJwtSecret();
-        assertNotNull(secret);
-        assertFalse(secret.isBlank());
+    @DisplayName("Deve lançar exceção se o segredo JWT for vazio")
+    void testConstructorThrowsExceptionWhenSecretIsBlank() {
+        // Arrange & Act & Assert
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            new JwtSecretProvider(" ");
+        }, "Deveria lançar uma exceção quando o segredo JWT for vazio.");
     }
 }
