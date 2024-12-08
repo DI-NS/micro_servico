@@ -153,6 +153,20 @@
 				</executions>
 			</plugin>
 
+			<!-- Plugin para adicionar o atributo Main-Class no manifesto -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>3.3.0</version>
+				<configuration>
+					<archive>
+						<manifest>
+							<mainClass>com.medicamento.medicamento_microservico.MedicamentoMicroservicoApplication</mainClass>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
+
 		</plugins>
 	</build>
 
