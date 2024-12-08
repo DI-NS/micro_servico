@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
 import java.util.Date;
 
 @Service
@@ -20,6 +19,9 @@ public class TokenService {
     public TokenService(@Value("${jwt.secret}") String envKey, @Value("${jwt.expiration}") long expiration) {
         if (envKey == null || envKey.isBlank()) {
             throw new IllegalArgumentException("A variável de ambiente 'JWT_SECRET' deve ser definida.");
+        }
+        if (expiration <= 0) {
+            throw new IllegalArgumentException("O tempo de expiração deve ser maior que zero.");
         }
         this.secretKey = Keys.hmacShaKeyFor(envKey.getBytes(StandardCharsets.UTF_8));
         this.expiration = expiration * 1000; // converte segundos para milissegundos
@@ -37,7 +39,6 @@ public class TokenService {
     }
 
     public boolean validateToken(String token) {
-        // Este método no Auth-Service é usado internamente se precisar
         try {
             Jwts.parserBuilder()
                     .setSigningKey(secretKey)

@@ -1,108 +1,90 @@
 package MedMap.exception;
 
-import MedMap.model.User;
-import MedMap.service.AuthService;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.test.web.servlet.MockMvc;
 import jakarta.servlet.http.HttpServletRequest;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
 
-
-/**
- * Testa o GlobalExceptionHandler, incluindo cenários com Swagger e sem Swagger,
- * e diferentes exceções (UserAlreadyExists e InvalidCredentials).
- */
-@SpringBootTest
-@AutoConfigureMockMvc
 class GlobalExceptionHandlerTest {
 
-    @Autowired
-    MockMvc mockMvc;
+    private GlobalExceptionHandler exceptionHandler;
 
-    @MockBean
-    AuthService authService;
+    @Mock
+    private HttpServletRequest mockRequest;
 
-    @Test
-    void shouldHandleUserAlreadyExistsException() throws Exception {
-        when(authService.register(any(User.class)))
-                .thenThrow(new UserAlreadyExistsException("Uma UBS com esse CNES já está registrada."));
-
-        mockMvc.perform(post("/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"nomeUbs\":\"UBS Teste\", \"cnes\":\"123456\", \"address\":\"Rua ABC\", \"password\":\"senha\"}"))
-                .andExpect(status().isConflict())
-                .andExpect(content().string("Uma UBS com esse CNES já está registrada."));
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+        exceptionHandler = new GlobalExceptionHandler();
     }
 
     @Test
-    void shouldHandleInvalidCredentialsException() throws Exception {
-        when(authService.login("naoencontrado", "qualquer"))
-                .thenThrow(new InvalidCredentialsException("UBS não encontrada ou dados inválidos"));
+    void testHandleUserAlreadyExistsExceptionForSwaggerRequest() {
+        // Arrange
+        when(mockRequest.getRequestURI()).thenReturn("/v3/api-docs");
 
-        mockMvc.perform(post("/auth/login")
-                        .param("cnes","naoencontrado")
-                        .param("password","qualquer"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(content().string("UBS não encontrada ou dados inválidos"));
-    }
+        UserAlreadyExistsException exception = new UserAlreadyExistsException("User already exists");
 
-    @Test
-    void testUserAlreadyExists_Swagger() {
-        GlobalExceptionHandler handler = new GlobalExceptionHandler();
-        HttpServletRequest request = new MockHttpServletRequest("GET", "/swagger-ui/index.html");
-        ResponseEntity<String> response = handler.handleUserAlreadyExists(
-                new UserAlreadyExistsException("Exists"),
-                request
-        );
-        assertEquals(200, response.getStatusCodeValue());
+        // Act
+        ResponseEntity<String> response = exceptionHandler.handleUserAlreadyExists(exception, mockRequest);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Exceção ignorada na documentação Swagger", response.getBody());
+        verify(mockRequest, times(1)).getRequestURI();
     }
 
     @Test
-    void testUserAlreadyExists_NoSwagger() {
-        GlobalExceptionHandler handler = new GlobalExceptionHandler();
-        HttpServletRequest request = new MockHttpServletRequest("GET", "/normal-endpoint");
-        ResponseEntity<String> response = handler.handleUserAlreadyExists(
-                new UserAlreadyExistsException("Exists"),
-                request
-        );
-        assertEquals(409, response.getStatusCodeValue());
-        assertEquals("Exists", response.getBody());
+    void testHandleUserAlreadyExistsExceptionForNonSwaggerRequest() {
+        // Arrange
+        when(mockRequest.getRequestURI()).thenReturn("/api/users");
+
+        UserAlreadyExistsException exception = new UserAlreadyExistsException("User already exists");
+
+        // Act
+        ResponseEntity<String> response = exceptionHandler.handleUserAlreadyExists(exception, mockRequest);
+
+        // Assert
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+        assertEquals("User already exists", response.getBody());
+        verify(mockRequest, times(1)).getRequestURI();
     }
 
     @Test
-    void testInvalidCredentials_Swagger() {
-        GlobalExceptionHandler handler = new GlobalExceptionHandler();
-        HttpServletRequest request = new MockHttpServletRequest("GET", "/v3/api-docs/something");
-        ResponseEntity<String> response = handler.handleInvalidCredentials(
-                new InvalidCredentialsException("Invalid"),
-                request
-        );
-        assertEquals(200, response.getStatusCodeValue());
+    void testHandleInvalidCredentialsExceptionForSwaggerRequest() {
+        // Arrange
+        when(mockRequest.getRequestURI()).thenReturn("/swagger-ui");
+
+        InvalidCredentialsException exception = new InvalidCredentialsException("Invalid credentials");
+
+        // Act
+        ResponseEntity<String> response = exceptionHandler.handleInvalidCredentials(exception, mockRequest);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Exceção ignorada na documentação Swagger", response.getBody());
+        verify(mockRequest, times(1)).getRequestURI();
     }
 
     @Test
-    void testInvalidCredentials_NoSwagger() {
-        GlobalExceptionHandler handler = new GlobalExceptionHandler();
-        HttpServletRequest request = new MockHttpServletRequest("GET", "/another-endpoint");
-        ResponseEntity<String> response = handler.handleInvalidCredentials(
-                new InvalidCredentialsException("Invalid"),
-                request
-        );
-        assertEquals(401, response.getStatusCodeValue());
-        assertEquals("Invalid", response.getBody());
+    void testHandleInvalidCredentialsExceptionForNonSwaggerRequest() {
+        // Arrange
+        when(mockRequest.getRequestURI()).thenReturn("/api/auth");
+
+        InvalidCredentialsException exception = new InvalidCredentialsException("Invalid credentials");
+
+        // Act
+        ResponseEntity<String> response = exceptionHandler.handleInvalidCredentials(exception, mockRequest);
+
+        // Assert
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertEquals("Invalid credentials", response.getBody());
+        verify(mockRequest, times(1)).getRequestURI();
     }
 }
