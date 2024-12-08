@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/medicamento-microservico/medicamento-microservico.iml" filepath="$PROJECT_DIR$/medicamento-microservico/medicamento-microservico.iml" />
+      <module fileurl="file://$PROJECT_DIR$/usuario-microservico/usuario-microservico.iml" filepath="$PROJECT_DIR$/usuario-microservico/usuario-microservico.iml" />
+    </modules>
+  </component>
+</project>

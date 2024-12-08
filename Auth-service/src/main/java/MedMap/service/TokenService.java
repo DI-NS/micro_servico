@@ -17,20 +17,11 @@ public class TokenService {
     private final SecretKey secretKey;
     private final long expiration;
 
-    public TokenService(@Value("${jwt.expiration}") long expiration) {
-        // Tenta ler a chave da variável de ambiente
-        String envKey = System.getenv("JWT_SECRET");
+    public TokenService(@Value("${jwt.secret}") String envKey, @Value("${jwt.expiration}") long expiration) {
         if (envKey == null || envKey.isBlank()) {
-            // Gera uma nova chave aleatória
-            SecretKey generatedKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-            System.out.println("ATENÇÃO: Nenhuma JWT_SECRET fornecida. Gerando chave aleatória:");
-            System.out.println(new String(generatedKey.getEncoded(), StandardCharsets.UTF_8));
-            this.secretKey = generatedKey;
-        } else {
-            // Usa a chave do ambiente
-            this.secretKey = Keys.hmacShaKeyFor(envKey.getBytes(StandardCharsets.UTF_8));
+            throw new IllegalArgumentException("A variável de ambiente 'JWT_SECRET' deve ser definida.");
         }
-
+        this.secretKey = Keys.hmacShaKeyFor(envKey.getBytes(StandardCharsets.UTF_8));
         this.expiration = expiration * 1000; // converte segundos para milissegundos
     }
 

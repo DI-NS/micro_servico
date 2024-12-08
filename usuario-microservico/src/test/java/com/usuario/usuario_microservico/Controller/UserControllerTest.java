@@ -2,6 +2,7 @@ package com.usuario.usuario_microservico.Controller;
 
 import com.usuario.usuario_microservico.Model.Medicamento;
 import com.usuario.usuario_microservico.Service.UserService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,94 +20,68 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-
 @WebMvcTest(UserController.class)
 public class UserControllerTest {
 
-    // MockMvc permite a simulação de requisições HTTP.
     @Autowired
     private MockMvc mockMvc;
 
-    // MockBean cria um mock do UserService, utilizado pelo UserController.
     @MockBean
     private UserService userService;
 
-    /**
-     * Testa se o endpoint "/usuarios/medicamentos" retorna uma lista de medicamentos.
-     */
-    @Test
-    void ReturnListOfMedicamentos() throws Exception {
-        // Cria um medicamento de exemplo.
-        Medicamento medicamento = new Medicamento();
+    private Medicamento medicamento;
+
+    @BeforeEach
+    void setUp() {
+        medicamento = new Medicamento();
         medicamento.setNome("Paracetamol");
         medicamento.setDescricao("Analgésico");
         medicamento.setEndereco("Farmácia Central");
+    }
 
-        // Lista simulada de medicamentos.
+    @Test
+    void testGetAllMedicamentos() throws Exception {
         List<Medicamento> medicamentos = Arrays.asList(medicamento);
 
-        // Simula o comportamento do serviço para retornar a lista.
         when(userService.getAllMedicamentos()).thenReturn(medicamentos);
 
-        // Realiza a chamada ao endpoint e valida o retorno.
         mockMvc.perform(get("/usuarios/medicamentos")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()) // Verifica se o status é 200 OK.
-                .andExpect(jsonPath("$[0].nome").value("Paracetamol")) // Verifica o nome.
-                .andExpect(jsonPath("$[0].descricao").value("Analgésico")) // Verifica a descrição.
-                .andExpect(jsonPath("$[0].endereco").value("Farmácia Central")); // Verifica o endereço.
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].nome").value("Paracetamol"))
+                .andExpect(jsonPath("$[0].descricao").value("Analgésico"))
+                .andExpect(jsonPath("$[0].endereco").value("Farmácia Central"));
     }
 
-    /**
-     * Testa se o endpoint "/usuarios/medicamentos/{id}" retorna um medicamento pelo ID.
-     */
     @Test
-    void ReturnMedicamentoById() throws Exception {
-        // Cria um medicamento de exemplo.
-        Medicamento medicamento = new Medicamento();
-        medicamento.setNome("Ibuprofeno");
-        medicamento.setDescricao("Anti-inflamatório");
-        medicamento.setEndereco("Farmácia Central");
-
-        // Simula o comportamento do serviço para retornar o medicamento.
+    void testGetMedicamentoById() throws Exception {
         when(userService.getMedicamentoById(1L)).thenReturn(medicamento);
 
-        // Realiza a chamada ao endpoint e valida o retorno.
         mockMvc.perform(get("/usuarios/medicamentos/1")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()) // Verifica se o status é 200 OK.
-                .andExpect(jsonPath("$.nome").value("Ibuprofeno")) // Verifica o nome.
-                .andExpect(jsonPath("$.descricao").value("Anti-inflamatório")) // Verifica a descrição.
-                .andExpect(jsonPath("$.endereco").value("Farmácia Central")); // Verifica o endereço.
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nome").value("Paracetamol"))
+                .andExpect(jsonPath("$.descricao").value("Analgésico"))
+                .andExpect(jsonPath("$.endereco").value("Farmácia Central"));
     }
 
-    /**
-     * Testa se o endpoint "/usuarios/medicamentos" retorna 500 quando o serviço falha.
-     */
     @Test
-    void Return500WhenServiceFailsToGetAllMedicamentos() throws Exception {
-        // Simula uma exceção no serviço.
-        when(userService.getAllMedicamentos()).thenThrow(new RuntimeException("Unexpected error"));
+    void testGetAllMedicamentosThrowsException() throws Exception {
+        when(userService.getAllMedicamentos()).thenThrow(new RuntimeException("Erro ao buscar medicamentos"));
 
-        // Realiza a chamada ao endpoint e valida o retorno.
         mockMvc.perform(get("/usuarios/medicamentos")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isInternalServerError()) // Verifica se o status é 500.
-                .andExpect(jsonPath("$.message").value("Unexpected error")); // Verifica a mensagem de erro.
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.message").value("Erro ao buscar medicamentos"));
     }
 
-    /**
-     * Testa se o endpoint "/usuarios/medicamentos/{id}" retorna 404 quando o medicamento não é encontrado.
-     */
     @Test
-    void Return404WhenMedicamentoNotFoundById() throws Exception {
-        // Simula exceção quando um ID inexistente é solicitado.
-        when(userService.getMedicamentoById(999L)).thenThrow(new NoSuchElementException("Medicamento not found"));
+    void testGetMedicamentoByIdNotFound() throws Exception {
+        when(userService.getMedicamentoById(99L)).thenThrow(new NoSuchElementException("Medicamento não encontrado"));
 
-        // Realiza a chamada ao endpoint e valida o retorno.
-        mockMvc.perform(get("/usuarios/medicamentos/999")
+        mockMvc.perform(get("/usuarios/medicamentos/99")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound()) // Verifica se o status é 404.
-                .andExpect(jsonPath("$.message").value("Medicamento not found")); // Verifica a mensagem de erro.
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Medicamento não encontrado"));
     }
 }
