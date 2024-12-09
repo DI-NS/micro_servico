@@ -10,7 +10,7 @@ import java.util.List;
  * Interface Feign Client para comunicação com o microserviço de Medicamentos.
  * Esta interface é responsável por abstrair as chamadas HTTP para o serviço de medicamentos.
  */
-@FeignClient(name = "medicamento-microservico", url = "http://localhost:8080/medicamento")
+@FeignClient(name = "medicamento-microservico", url = "https://medicamento-microservico.onrender.com/medicamento")
 public interface MedicamentoFeignClient {
 
     //Método para buscar todos os medicamentos disponíveis no microserviço de medicamentos.
