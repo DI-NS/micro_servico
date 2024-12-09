@@ -8,6 +8,12 @@ class UsuarioMicroservicoApplicationTests {
 
 	@Test
 	void contextLoads() {
+		// Verifica se o contexto do Spring é carregado com sucesso.
 	}
 
+	@Test
+	void main() {
+		// Testa o método main da aplicação.
+		UsuarioMicroservicoApplication.main(new String[] {});
+	}
 }
