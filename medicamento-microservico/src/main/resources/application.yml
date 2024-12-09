@@ -5,7 +5,7 @@ spring:
   datasource:
     url: jdbc:postgresql://aws-0-sa-east-1.pooler.supabase.com:6543/postgres
     driver-class-name: org.postgresql.Driver
-    username: postgres.kcznmlsdphaxfxotjits
+    username: postgres.kytegxoynfsmmgpdncwx
     password: Madmap@@021
     initialization-mode: always
   jpa:
@@ -27,11 +27,3 @@ springdoc:
 
 jwt:
   secret: ${JWT_SECRET:XPdF3BA71M1oV1ZkkHXVkX4FZSeC1lwX4Ltnv2HmHHA=}
-################POWER SHEL
-#  $env:JWT_SECRET="XPdF3BA71M1oV1ZkkHXVkX4FZSeC1lwX4Ltnv2HmHHA="
-#  mvn spring-boot:run
-
-#ou
-###################CMD
-#  set JWT_SECRET=XPdF3BA71M1oV1ZkkHXVkX4FZSeC1lwX4Ltnv2HmHHA=
-#  mvn spring-boot:run
