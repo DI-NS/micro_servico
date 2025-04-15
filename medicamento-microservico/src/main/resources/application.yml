@@ -5,17 +5,20 @@ spring:
   datasource:
     url: jdbc:postgresql://aws-0-sa-east-1.pooler.supabase.com:6543/postgres
     driver-class-name: org.postgresql.Driver
-    username: postgres.kytegxoynfsmmgpdncwx
-    password: Madmap@@021
+    username: postgres.zapxzqrggnsqgbfjvtrl
+    password: MedmapParaUbs
     initialization-mode: always
+
   jpa:
     hibernate:
       ddl-auto: update
     properties:
       hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
     show-sql: true
+
   liquibase:
     enabled: false
+
 server:
   port: 8080
 
