@@ -6,6 +6,5 @@ public record UbsRequest(
         @NotBlank String nome,
         @NotBlank String cnes,
         @NotBlank String endereco,
-        @NotBlank String senha      // só na criação
+        @NotBlank String senha
 ) {}
-

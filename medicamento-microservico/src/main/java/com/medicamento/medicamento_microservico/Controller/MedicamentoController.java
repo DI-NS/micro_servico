@@ -5,9 +5,7 @@ import com.medicamento.medicamento_microservico.Service.MedicamentoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
-
 
 @RestController
 @RequestMapping("/medicamento")
@@ -15,7 +13,6 @@ public class MedicamentoController {
 
     @Autowired
     private MedicamentoService medicamentoService;
-
 
     @PostMapping
     public Medicamento createMedicamento(@RequestBody Medicamento medicamento) {

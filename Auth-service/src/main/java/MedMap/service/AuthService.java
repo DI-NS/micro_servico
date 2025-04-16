@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 /**
  * Serviço responsável pela lógica de autenticação e registro.
- * Aplica princípios SOLID, mantendo apenas a lógica de autenticação.
+ * Neste modelo, o Auth‑service registra os dados (usuário) recebidos e somente autentica as UBS.
  */
 @Service
 public class AuthService {
@@ -25,10 +25,8 @@ public class AuthService {
     }
 
     /**
-     * Registra uma nova UBS no sistema.
-     * Recebe nomeUbs, cnes, address e password.
-     * O cnes é armazenado em texto puro (identificador público).
-     * A password é hasheada antes de salvar.
+     * Registra uma nova UBS no Auth‑service.
+     * Recebe nomeUbs, cnes e password.
      *
      * @param user Dados da UBS a ser registrada.
      * @return Mensagem de sucesso.
@@ -39,10 +37,8 @@ public class AuthService {
             throw new UserAlreadyExistsException("Uma UBS com esse CNES já está registrada.");
         }
 
-        // Hasheia a senha do usuário
+        // Hasheia a senha e persiste o usuário
         user.setHashedPassword(passwordEncoder.encode(user.getPassword()));
-
-        // Salva o usuário no banco
         userRepository.save(user);
         return "UBS registrada com sucesso!";
     }
@@ -50,20 +46,18 @@ public class AuthService {
     /**
      * Autentica uma UBS com base no CNES e senha.
      *
-     * @param cnes    Código CNES da UBS (identificador).
+     * @param cnes     Código CNES da UBS.
      * @param password Senha fornecida pela UBS.
-     * @return Token JWT para acesso às rotas protegidas.
+     * @return Token JWT se a autenticação for bem-sucedida.
      */
     public String login(String cnes, String password) {
         User user = userRepository.findByCnes(cnes)
                 .orElseThrow(() -> new InvalidCredentialsException("UBS não encontrada ou dados inválidos"));
 
-        // Verifica se a senha fornecida corresponde ao hash armazenado
         if (!passwordEncoder.matches(password, user.getHashedPassword())) {
             throw new InvalidCredentialsException("CNES ou senha inválidos");
         }
 
-        // Gera o token JWT contendo nomeUbs e cnes
         return tokenService.generateToken(user.getCnes());
     }
 }

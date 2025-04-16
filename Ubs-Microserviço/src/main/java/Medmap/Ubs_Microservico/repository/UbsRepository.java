@@ -1,4 +1,5 @@
 package Medmap.Ubs_Microservico.repository;
+
 import Medmap.Ubs_Microservico.model.Ubs;
 import org.springframework.data.jpa.repository.JpaRepository;
 

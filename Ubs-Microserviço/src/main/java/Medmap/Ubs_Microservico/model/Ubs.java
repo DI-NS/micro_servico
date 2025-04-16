@@ -8,10 +8,13 @@ import lombok.Setter;
 
 /**
  * Entidade UBS armazenada no banco local.
- * A senha **não** é guardada aqui – fica no Auth‑service.
+ * Agora, a tabela "ubs" conterá: ID, nome, CNES, endereço e senha.
  */
-@Getter @Setter @NoArgsConstructor
-@Entity @Table(name = "ubs")
+@Getter
+@Setter
+@NoArgsConstructor
+@Entity
+@Table(name = "ubs")
 public class Ubs {
 
     @Id
@@ -28,6 +31,6 @@ public class Ubs {
     @NotBlank(message = "Endereço é obrigatório")
     private String endereco;
 
-    /** flag para desativar UBS sem apagar do banco */
-    private boolean ativa = true;
+    @NotBlank(message = "Senha é obrigatória")
+    private String senha;
 }

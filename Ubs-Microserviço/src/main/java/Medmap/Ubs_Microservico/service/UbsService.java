@@ -9,7 +9,6 @@ import Medmap.Ubs_Microservico.model.Ubs;
 import Medmap.Ubs_Microservico.repository.UbsRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
-
 import java.util.HashMap;
 import java.util.List;
 
@@ -28,26 +27,24 @@ public class UbsService {
         this.medicamentoClient = medicamentoClient;
     }
 
-    /* ---------- CRUD ---------- */
-
     @Transactional
     public UbsResponse create(UbsRequest req) {
         if (repo.existsByCnes(req.cnes()))
             throw new ResourceAlreadyExistsException("CNES já cadastrado");
 
-        // 1) Registra credenciais no Auth‑service
+        // Registra credenciais no Auth‑service (envia nomeUbs, cnes e senha)
         var body = new HashMap<String, Object>();
         body.put("nomeUbs", req.nome());
         body.put("cnes", req.cnes());
-        body.put("address", req.endereco());
         body.put("password", req.senha());
-        authClient.registerUbs(body);            // se falhar, lança exceção e faz rollback
+        authClient.registerUbs(body);
 
-        // 2) Persiste metadados locais
+        // Persiste metadados locais (incluindo senha)
         Ubs ubs = new Ubs();
         ubs.setNome(req.nome());
         ubs.setCnes(req.cnes());
         ubs.setEndereco(req.endereco());
+        ubs.setSenha(req.senha());
         repo.save(ubs);
 
         return map(ubs);
@@ -67,28 +64,17 @@ public class UbsService {
     public UbsResponse update(String cnes, UbsUpdateRequest req) {
         Ubs ubs = repo.findByCnes(cnes)
                 .orElseThrow(() -> new ResourceNotFoundException("UBS não encontrada"));
-
         ubs.setNome(req.nome());
         ubs.setEndereco(req.endereco());
         return map(ubs);
     }
 
-    @Transactional
-    public void toggleStatus(String cnes) {
-        Ubs ubs = repo.findByCnes(cnes)
-                .orElseThrow(() -> new ResourceNotFoundException("UBS não encontrada"));
-        ubs.setAtiva(!ubs.isAtiva());
-    }
-
-    /* ---------- Integração Medicamentos ---------- */
-
+    // Integração com o Medicamento‑service (mantém o mesmo)
     public List<MedicamentoDTO> listarMedicamentosDaUbs(String cnes) {
         return medicamentoClient.listByUbs(cnes);
     }
 
-    /* ---------- util ---------- */
-
     private UbsResponse map(Ubs u) {
-        return new UbsResponse(u.getId(), u.getNome(), u.getCnes(), u.getEndereco(), u.isAtiva());
+        return new UbsResponse(u.getId(), u.getNome(), u.getCnes(), u.getEndereco());
     }
 }

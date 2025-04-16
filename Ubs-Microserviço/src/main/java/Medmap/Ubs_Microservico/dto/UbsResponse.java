@@ -4,6 +4,5 @@ public record UbsResponse(
         Long id,
         String nome,
         String cnes,
-        String endereco,
-        boolean ativa
+        String endereco
 ) {}
