@@ -8,26 +8,26 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import javax.crypto.SecretKey;
 import java.io.IOException;
-import java.util.Base64;
+import java.nio.charset.StandardCharsets;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final byte[] keyBytes;
+    private final SecretKey secretKey;
     private final String ctx;   // context‑path (pode ser vazio)
 
     public JwtAuthenticationFilter(
             @Value("${jwt.secret}") String secret,
             @Value("${server.servlet.context-path:}") String ctx) {
 
-        this.keyBytes = Base64.getDecoder().decode(secret);
+        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.ctx = ctx;
     }
 
@@ -38,13 +38,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String path = req.getRequestURI().substring(ctx.length()); // remove prefixo
 
-        // ---------- rotas que NÃO exigem token ----------
-        if (isPublic(path, req.getMethod())) {
+        if (isPublic(req, path)) {
             chain.doFilter(req, res);
             return;
         }
 
-        // ---------- verifica header Authorization ----------
         String header = req.getHeader("Authorization");
         if (header == null || !header.startsWith("Bearer ")) {
             res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token ausente");
@@ -53,7 +51,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(Keys.hmacShaKeyFor(keyBytes))
+                    .setSigningKey(secretKey)
                     .build()
                     .parseClaimsJws(header.substring(7))
                     .getBody();
@@ -68,28 +66,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
     }
 
-    /* ----------------------------------------------------
-       Rotas públicas  (NÃO exigem JWT)
-       ---------------------------------------------------- */
-    private boolean isPublic(String p, String method) {
+    /* ---------- rotas que NÃO exigem JWT ---------- */
+    private boolean isPublic(HttpServletRequest req, String p) {
 
-        // Swagger / H2
-        if (p.startsWith("/swagger-ui")     || p.equals("/swagger-ui.html") ||
-                p.startsWith("/v3/api-docs")    || p.startsWith("/api-docs")    ||
-                p.startsWith("/swagger-config") || p.startsWith("/h2-console"))
+        /* Swagger / H2 */
+        if (p.startsWith("/swagger-ui")  || p.equals("/swagger-ui.html") ||
+                p.startsWith("/v3/api-docs") || p.startsWith("/h2-console"))
             return true;
 
-        // Autenticação
-        if (p.startsWith("/auth/"))
-            return true;
+        /* -------- registro e consulta de UBS -------- */
+        if ("POST".equalsIgnoreCase(req.getMethod()) && p.equals("/ubs"))
+            return true;                                   // cadastro público
 
-        // ----------- UBS -----------
-        // • POST /ubs  – registro de nova UBS
-        // • GET  /ubs  e /ubs/{cnes}  – consultas públicas
-        if (p.startsWith("/ubs")) {
-            return HttpMethod.POST.matches(method) || HttpMethod.GET.matches(method);
-        }
+        if ("GET".equalsIgnoreCase(req.getMethod()) && p.startsWith("/ubs"))
+            return true;                                   // listar / consultar
 
-        return false;  // demais rotas exigem JWT
+        /* -------------------------------------------- */
+        return false;
     }
 }

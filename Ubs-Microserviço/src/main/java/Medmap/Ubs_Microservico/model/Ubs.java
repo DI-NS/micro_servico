@@ -7,30 +7,21 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Entidade UBS armazenada no banco local.
- * Agora, a tabela "ubs" conterá: ID, nome, CNES, endereço e senha.
+ * Entidade UBS – não armazena senha!
+ * Tabela: ubs (id, nome, cnes, endereco)
  */
-@Getter
-@Setter
-@NoArgsConstructor
-@Entity
-@Table(name = "ubs")
+@Getter @Setter @NoArgsConstructor
+@Entity @Table(name = "ubs")
 public class Ubs {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Nome da UBS é obrigatório")
-    private String nome;
+    @NotBlank private String nome;
 
     @Column(unique = true, nullable = false)
-    @NotBlank(message = "CNES é obrigatório")
-    private String cnes;
+    @NotBlank private String cnes;
 
-    @NotBlank(message = "Endereço é obrigatório")
-    private String endereco;
-
-    @NotBlank(message = "Senha é obrigatória")
-    private String senha;
+    @NotBlank private String endereco;
 }

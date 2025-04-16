@@ -6,5 +6,5 @@ public record UbsRequest(
         @NotBlank String nome,
         @NotBlank String cnes,
         @NotBlank String endereco,
-        @NotBlank String senha
+        @NotBlank String senha        // só transita – não é persistida
 ) {}
