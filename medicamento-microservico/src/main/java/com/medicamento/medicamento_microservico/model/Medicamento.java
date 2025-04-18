@@ -1,4 +1,4 @@
-package com.medicamento.medicamento_microservico.Model;
+package com.medicamento.medicamento_microservico.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;

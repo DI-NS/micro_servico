@@ -1,6 +1,6 @@
-package com.medicamento.medicamento_microservico.Model;
+package com.medicamento.medicamento_microservico.model;
 
-import com.medicamento.medicamento_microservico.Repository.MedicamentoRepository;
+import com.medicamento.medicamento_microservico.repository.MedicamentoRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;

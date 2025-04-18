@@ -1,6 +1,5 @@
-package com.medicamento.medicamento_microservico.Service;
+package com.medicamento.medicamento_microservico.service;
 
-import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;

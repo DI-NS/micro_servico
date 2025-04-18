@@ -14,38 +14,41 @@ import java.util.Date;
 public class TokenService {
 
     private final SecretKey secretKey;
-    private final long expiration;
+    private final long expirationMillis;
 
     public TokenService(
             @Value("${jwt.secret}") String envKey,
-            @Value("${jwt.expiration}") long expiration
+            @Value("${jwt.expiration}") long expirationSeconds
     ) {
         if (envKey == null || envKey.isBlank()) {
             throw new IllegalArgumentException("A variável de ambiente 'JWT_SECRET' deve ser definida.");
         }
-        if (expiration <= 0) {
+        if (expirationSeconds <= 0) {
             throw new IllegalArgumentException("O tempo de expiração deve ser maior que zero.");
         }
-        this.secretKey = Keys.hmacShaKeyFor(envKey.getBytes(StandardCharsets.UTF_8));
-        this.expiration = expiration * 1000; // segundos → ms
+        this.secretKey       = Keys.hmacShaKeyFor(envKey.getBytes(StandardCharsets.UTF_8));
+        this.expirationMillis = expirationSeconds * 1000;
     }
 
-    /** Token “normal” para UBS (sub = cnes) */
-    public String generateToken(String cnes) {
-        Date now = new Date();
-        Date expiry = new Date(now.getTime() + expiration);
+    /** Gera token para UBS (sub = cnes, claim ubsId = id do usuário) */
+    public String generateToken(String cnes, Long ubsId) {
+        Date now    = new Date();
+        Date expiry = new Date(now.getTime() + expirationMillis);
+
         return Jwts.builder()
                 .setSubject(cnes)
+                .claim("ubsId", ubsId)
                 .setIssuedAt(now)
                 .setExpiration(expiry)
                 .signWith(secretKey, SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    /** NOVO: token de serviço para chamadas internas (claim service=true) */
+    /** Token “internal” para o serviço UBS‑service */
     public String generateServiceToken() {
-        Date now = new Date();
-        Date expiry = new Date(now.getTime() + expiration);
+        Date now    = new Date();
+        Date expiry = new Date(now.getTime() + expirationMillis);
+
         return Jwts.builder()
                 .setSubject("ubs-service")
                 .claim("service", true)

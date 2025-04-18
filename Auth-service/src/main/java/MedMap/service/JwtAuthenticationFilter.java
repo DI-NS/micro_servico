@@ -39,7 +39,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        // obtém header
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -52,7 +51,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String jwt = authHeader.substring(7);
         try {
-            // carrega secret direto em bytes UTF-8
             String secret = jwtSecretProvider.getJwtSecret();
             SecretKey key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
             Claims claims = Jwts.parserBuilder()
@@ -63,8 +61,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             String sub       = claims.getSubject();
             Boolean isService = claims.get("service", Boolean.class);
+            Long    ubsId     = claims.get("ubsId", Long.class);
 
-            // se é chamada a /auth/register, exige token de serviço
+            // rota de registro deve usar token de serviço
             if (path.equals("/auth/register")) {
                 if (!"ubs-service".equals(sub) || !Boolean.TRUE.equals(isService)) {
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -74,16 +73,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     );
                     return;
                 }
-                // tudo ok: libera registro
                 SecurityContextHolder.getContext().setAuthentication(
                         new UsernamePasswordAuthenticationToken("ubs-service", null, null)
                 );
+
             } else {
-                // para outros endpoints (por ex. login, depois de públicos),
-                // aceita qualquer token válido
-                SecurityContextHolder.getContext().setAuthentication(
-                        new UsernamePasswordAuthenticationToken(sub, null, null)
-                );
+                // para endpoints UBS (POST/PUT medicamento), guardamos o CNES e o ubsId no contexto
+                UsernamePasswordAuthenticationToken auth =
+                        new UsernamePasswordAuthenticationToken(sub, null, null);
+                auth.setDetails(ubsId);
+                SecurityContextHolder.getContext().setAuthentication(auth);
             }
 
             filterChain.doFilter(request, response);

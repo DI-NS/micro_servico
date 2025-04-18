@@ -1,7 +1,7 @@
-package com.medicamento.medicamento_microservico.Service;
+package com.medicamento.medicamento_microservico.service;
 
-import com.medicamento.medicamento_microservico.Model.Medicamento;
-import com.medicamento.medicamento_microservico.Repository.MedicamentoRepository;
+import com.medicamento.medicamento_microservico.model.Medicamento;
+import com.medicamento.medicamento_microservico.repository.MedicamentoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
