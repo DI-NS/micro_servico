@@ -158,7 +158,13 @@
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
         </dependency>
-    </dependencies>
+		<dependency>
+			<groupId>io.github.openfeign</groupId>
+			<artifactId>feign-core</artifactId>
+			<version>13.5</version>
+			<scope>compile</scope>
+		</dependency>
+	</dependencies>
 
 	<build>
 		<plugins>

@@ -21,12 +21,12 @@ import java.nio.charset.StandardCharsets;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final SecretKey secretKey;
-    private final String ctx;   // context‑path (pode ser vazio)
+    private final String ctx;
 
     public JwtAuthenticationFilter(
             @Value("${jwt.secret}") String secret,
-            @Value("${server.servlet.context-path:}") String ctx) {
-
+            @Value("${server.servlet.context-path:}") String ctx
+    ) {
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.ctx = ctx;
     }
@@ -34,10 +34,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest req,
                                     HttpServletResponse res,
-                                    FilterChain chain) throws ServletException, IOException {
+                                    FilterChain chain)
+            throws ServletException, IOException {
 
-        String path = req.getRequestURI().substring(ctx.length()); // remove prefixo
-
+        String path = req.getRequestURI().substring(ctx.length());
         if (isPublic(req, path)) {
             chain.doFilter(req, res);
             return;
@@ -45,7 +45,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String header = req.getHeader("Authorization");
         if (header == null || !header.startsWith("Bearer ")) {
-            res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token ausente");
+            res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            res.setContentType("application/json");
+            res.getWriter().write("{\"erro\":\"Token ausente\"}");
             return;
         }
 
@@ -62,26 +64,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             chain.doFilter(req, res);
 
         } catch (Exception e) {
-            res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token inválido ou expirado");
+            res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            res.setContentType("application/json");
+            res.getWriter().write("{\"erro\":\"Token inválido ou expirado\"}");
         }
     }
 
-    /* ---------- rotas que NÃO exigem JWT ---------- */
     private boolean isPublic(HttpServletRequest req, String p) {
-
-        /* Swagger / H2 */
-        if (p.startsWith("/swagger-ui")  || p.equals("/swagger-ui.html") ||
-                p.startsWith("/v3/api-docs") || p.startsWith("/h2-console"))
+        if (p.startsWith("/swagger-ui") || p.equals("/swagger-ui.html") ||
+                p.startsWith("/v3/api-docs")  || p.startsWith("/h2-console"))
             return true;
-
-        /* -------- registro e consulta de UBS -------- */
         if ("POST".equalsIgnoreCase(req.getMethod()) && p.equals("/ubs"))
-            return true;                                   // cadastro público
-
+            return true;
         if ("GET".equalsIgnoreCase(req.getMethod()) && p.startsWith("/ubs"))
-            return true;                                   // listar / consultar
-
-        /* -------------------------------------------- */
+            return true;
         return false;
     }
 }

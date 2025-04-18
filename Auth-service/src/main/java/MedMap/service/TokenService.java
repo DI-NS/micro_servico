@@ -16,7 +16,10 @@ public class TokenService {
     private final SecretKey secretKey;
     private final long expiration;
 
-    public TokenService(@Value("${jwt.secret}") String envKey, @Value("${jwt.expiration}") long expiration) {
+    public TokenService(
+            @Value("${jwt.secret}") String envKey,
+            @Value("${jwt.expiration}") long expiration
+    ) {
         if (envKey == null || envKey.isBlank()) {
             throw new IllegalArgumentException("A variável de ambiente 'JWT_SECRET' deve ser definida.");
         }
@@ -24,14 +27,28 @@ public class TokenService {
             throw new IllegalArgumentException("O tempo de expiração deve ser maior que zero.");
         }
         this.secretKey = Keys.hmacShaKeyFor(envKey.getBytes(StandardCharsets.UTF_8));
-        this.expiration = expiration * 1000; // converte segundos para milissegundos
+        this.expiration = expiration * 1000; // segundos → ms
     }
 
+    /** Token “normal” para UBS (sub = cnes) */
     public String generateToken(String cnes) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + expiration);
         return Jwts.builder()
                 .setSubject(cnes)
+                .setIssuedAt(now)
+                .setExpiration(expiry)
+                .signWith(secretKey, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    /** NOVO: token de serviço para chamadas internas (claim service=true) */
+    public String generateServiceToken() {
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + expiration);
+        return Jwts.builder()
+                .setSubject("ubs-service")
+                .claim("service", true)
                 .setIssuedAt(now)
                 .setExpiration(expiry)
                 .signWith(secretKey, SignatureAlgorithm.HS256)
