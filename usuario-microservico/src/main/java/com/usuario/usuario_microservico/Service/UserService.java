@@ -13,15 +13,11 @@ public class UserService {
     @Autowired
     private MedicamentoFeignClient feignClient;
 
-    //Método para buscar todos os medicamentos disponíveis através do Feign Client.
     public List<Medicamento> getAllMedicamentos() {
-        // Chama o Feign Client para obter a lista de medicamentos do microserviço.
         return feignClient.getAllMedicamentos();
     }
 
-    //Método para buscar um medicamento específico pelo ID através do Feign Client.
     public Medicamento getMedicamentoById(Long id) {
-        // Chama o Feign Client para obter o medicamento pelo ID do microserviço.
         return feignClient.getMedicamentoById(id);
     }
 }

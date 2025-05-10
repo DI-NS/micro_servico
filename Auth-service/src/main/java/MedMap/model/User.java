@@ -6,15 +6,17 @@ import jakarta.validation.constraints.NotBlank;
 
 /**
  * Representa uma UBS (Unidade Básica de Saúde) no sistema MedMap.
- * CNES funciona como um identificador público (username).
- * A senha será armazenada de forma hasheada em hashedPassword.
+ * O CNES funciona como identificador público (username).
+ * A senha em texto não é armazenada no banco; somente o hash é persistido.
+ *
+ * Esquema da tabela "usuarios": ID, nome_ubs, cnes, senha_hash.
  */
 @Entity
-@Table(name = "users")
+@Table(name = "usuarios")
 public class User {
 
     @Id
-    @JsonIgnore // O ID não é relevante para o usuário
+    @JsonIgnore
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -33,8 +35,7 @@ public class User {
     private String cnes;
 
     /**
-     * Senha em texto puro não será armazenada no banco.
-     * Será utilizada apenas para receber o valor na requisição.
+     * Senha em texto puro, não será armazenada no banco.
      */
     @Transient
     @NotBlank(message = "A senha é obrigatória")
@@ -43,25 +44,17 @@ public class User {
     /**
      * Senha hasheada, armazenada de forma segura no banco.
      */
-    @JsonIgnore // Não expor o hash da senha.
-    @Column(name = "hashed_password", nullable = false)
+    @JsonIgnore
+    @Column(name = "senha_hash", nullable = false)
     private String hashedPassword;
-
-    /**
-     * Endereço da UBS.
-     */
-    @Column(nullable = false)
-    @NotBlank(message = "O endereço é obrigatório")
-    private String address;
 
     // Construtores
     public User() {
     }
 
-    public User(String nomeUbs, String cnes, String address, String password) {
+    public User(String nomeUbs, String cnes, String password) {
         this.nomeUbs = nomeUbs;
         this.cnes = cnes;
-        this.address = address;
         this.password = password;
     }
 
@@ -101,13 +94,4 @@ public class User {
     public void setHashedPassword(String hashedPassword) {
         this.hashedPassword = hashedPassword;
     }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
 }

@@ -12,20 +12,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import javax.crypto.SecretKey;
 import java.io.IOException;
-import java.util.Base64;
+import java.nio.charset.StandardCharsets;
 
-/**
- * Filtro responsável por validar o token JWT em requisições protegidas.
- *
- * Caso o endpoint seja público (como /auth/**, /swagger-ui/**, /v3/api-docs/**, /h2-console/**),
- * este filtro não deve exigir autenticação, permitindo que a requisição chegue ao controlador.
- *
- * Caso contrário, verifica se há um cabeçalho Authorization com "Bearer <token>".
- * - Se ausente ou inválido, retorna 401 "Acesso não autorizado".
- * - Se o token existir e for inválido/expirado, retorna 401 "Token JWT inválido ou expirado".
- * - Se o token for válido, autentica o contexto de segurança.
- */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -38,59 +28,78 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+                                    FilterChain filterChain)
+            throws ServletException, IOException {
 
-        // Use getRequestURI() para garantir que teremos o caminho completo da requisição.
         String path = request.getRequestURI();
 
-        // Se for uma rota pública, não exige token e não altera a resposta
+        // libera apenas login, swagger e h2
         if (isPublicEndpoint(path)) {
             filterChain.doFilter(request, response);
             return;
         }
 
         String authHeader = request.getHeader("Authorization");
-
-        // Verifica se o header existe e começa com "Bearer "
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Acesso não autorizado");
+            response.setContentType("application/json");
+            response.getWriter().write(
+                    "{\"erro\":\"Token de autenticação ausente ou inválido.\"}"
+            );
             return;
         }
 
         String jwt = authHeader.substring(7);
         try {
-            String jwtSecret = jwtSecretProvider.getJwtSecret();
-            byte[] keyBytes = Base64.getDecoder().decode(jwtSecret);
+            String secret = jwtSecretProvider.getJwtSecret();
+            SecretKey key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
             Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(Keys.hmacShaKeyFor(keyBytes))
+                    .setSigningKey(key)
                     .build()
                     .parseClaimsJws(jwt)
                     .getBody();
 
-            String cnes = claims.getSubject();
+            String sub       = claims.getSubject();
+            Boolean isService = claims.get("service", Boolean.class);
+            Long    ubsId     = claims.get("ubsId", Long.class);
 
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(cnes, null, null);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            // rota de registro deve usar token de serviço
+            if (path.equals("/auth/register")) {
+                if (!"ubs-service".equals(sub) || !Boolean.TRUE.equals(isService)) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json");
+                    response.getWriter().write(
+                            "{\"erro\":\"Token de serviço inválido para registro.\"}"
+                    );
+                    return;
+                }
+                SecurityContextHolder.getContext().setAuthentication(
+                        new UsernamePasswordAuthenticationToken("ubs-service", null, null)
+                );
+
+            } else {
+                // para endpoints UBS (POST/PUT medicamento), guardamos o CNES e o ubsId no contexto
+                UsernamePasswordAuthenticationToken auth =
+                        new UsernamePasswordAuthenticationToken(sub, null, null);
+                auth.setDetails(ubsId);
+                SecurityContextHolder.getContext().setAuthentication(auth);
+            }
+
+            filterChain.doFilter(request, response);
 
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Token JWT inválido ou expirado");
-            return;
+            response.setContentType("application/json");
+            response.getWriter().write(
+                    "{\"erro\":\"Token JWT inválido ou expirado.\"}"
+            );
         }
-
-        filterChain.doFilter(request, response);
     }
 
-    /**
-     * Determina se o endpoint é público, ou seja, não requer autenticação JWT.
-     * Aqui listamos os padrões de URL que devem ser acessíveis sem token.
-     */
     private boolean isPublicEndpoint(String path) {
-        return path.startsWith("/auth/") ||
-                path.startsWith("/swagger-ui") ||
-                path.startsWith("/v3/api-docs") ||
-                path.startsWith("/h2-console");
+        return path.startsWith("/auth/login")
+                || path.startsWith("/swagger-ui")
+                || path.startsWith("/v3/api-docs")
+                || path.startsWith("/h2-console");
     }
 }
