@@ -7,11 +7,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
-/** Comunicação com Medicamento-service */
+/**
+ * Comunicação com Medicamento-service
+ */
 @FeignClient(name = "medicamento-client",
         url = "${medicamento-service.url}")
 public interface MedicamentoClient {
 
-    @GetMapping("/medicamento")
+    /**
+     * GET /medicamento?ubs={cnes}
+     */
+    @GetMapping(value = "/medicamento", params = "ubs")
     List<MedicamentoDTO> listByUbs(@RequestParam("ubs") String cnes);
 }
