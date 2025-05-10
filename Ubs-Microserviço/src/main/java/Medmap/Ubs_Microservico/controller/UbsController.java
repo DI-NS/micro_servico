@@ -1,9 +1,7 @@
+// src/main/java/Medmap/Ubs_Microservico/controller/UbsController.java
 package Medmap.Ubs_Microservico.controller;
 
-import Medmap.Ubs_Microservico.dto.MedicamentoDTO;
-import Medmap.Ubs_Microservico.dto.UbsRequest;
-import Medmap.Ubs_Microservico.dto.UbsResponse;
-import Medmap.Ubs_Microservico.dto.UbsUpdateRequest;
+import Medmap.Ubs_Microservico.dto.*;
 import Medmap.Ubs_Microservico.service.UbsService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -45,5 +43,12 @@ public class UbsController {
     @GetMapping("/{cnes}/medicamentos")
     public List<MedicamentoDTO> listMeds(@PathVariable String cnes) {
         return service.listarMedicamentosDaUbs(cnes);
+    }
+
+    // --- NOVO endpoint de “esqueci minha senha” ---
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> forgotPassword(@Valid @RequestBody ForgotPasswordRequestDto dto) {
+        service.forgotPassword(dto);
+        return ResponseEntity.ok("Senha atualizada com sucesso!");
     }
 }

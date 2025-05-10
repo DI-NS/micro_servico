@@ -1,5 +1,6 @@
 package MedMap.controller;
 
+import MedMap.dto.ForgotPasswordRequest;
 import MedMap.model.User;
 import MedMap.service.AuthService;
 import jakarta.validation.Valid;
@@ -27,5 +28,12 @@ public class AuthController {
                                         @RequestParam String password) {
         String token = authService.login(cnes, password);
         return ResponseEntity.ok(token);
+    }
+
+    // --- NOVO: esqueci minha senha ---
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> forgotPassword(@Valid @RequestBody ForgotPasswordRequest req) {
+        String msg = authService.forgotPassword(req);
+        return ResponseEntity.ok(msg);
     }
 }

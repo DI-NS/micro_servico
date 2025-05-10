@@ -2,6 +2,7 @@ package Medmap.Ubs_Microservico.service;
 
 import Medmap.Ubs_Microservico.client.AuthClient;
 import Medmap.Ubs_Microservico.client.MedicamentoClient;
+import Medmap.Ubs_Microservico.dto.ForgotPasswordRequestDto;
 import Medmap.Ubs_Microservico.dto.MedicamentoDTO;
 import Medmap.Ubs_Microservico.dto.UbsRequest;
 import Medmap.Ubs_Microservico.dto.UbsResponse;
@@ -51,7 +52,7 @@ public class UbsService {
         } catch (FeignException e) {
             throw new ResponseStatusException(
                     HttpStatus.valueOf(e.status()),
-                    e.contentUTF8().isBlank() ? "Auth-service error" : e.contentUTF8(),
+                    e.contentUTF8().isBlank() ? "Auth‐service error" : e.contentUTF8(),
                     e);
         }
 
@@ -60,7 +61,6 @@ public class UbsService {
         ubs.setCnes(req.cnes());
         ubs.setEndereco(req.endereco());
         repo.save(ubs);
-
         return map(ubs);
     }
 
@@ -76,12 +76,11 @@ public class UbsService {
 
     @Transactional
     public UbsResponse update(String cnes, UbsUpdateRequest req) {
-        String cnesDoToken = (String) SecurityContextHolder.getContext()
+        String tokenCnes = (String) SecurityContextHolder.getContext()
                 .getAuthentication().getPrincipal();
-        if (!cnes.equals(cnesDoToken)) {
+        if (!cnes.equals(tokenCnes)) {
             throw new AccessDeniedException("Não é permitido alterar outra UBS");
         }
-
         Ubs ubs = repo.findByCnes(cnes)
                 .orElseThrow(() -> new ResourceNotFoundException("UBS não encontrada"));
         ubs.setNome(req.nome());
@@ -89,8 +88,30 @@ public class UbsService {
         return map(ubs);
     }
 
+    /**
+     * Chama o medicamento-service para listar só os da UBS lógica.
+     */
     public List<MedicamentoDTO> listarMedicamentosDaUbs(String cnes) {
         return medicamentoClient.listByUbs(cnes);
+    }
+
+    /**
+     * Esqueci senha: repassa ao Auth-service
+     */
+    public void forgotPassword(ForgotPasswordRequestDto dto) {
+        Ubs ubs = repo.findByCnes(dto.cnes())
+                .orElseThrow(() -> new ResourceNotFoundException("UBS não encontrada"));
+        if (!ubs.getNome().equals(dto.nomeUbs())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Dados de UBS inválidos");
+        }
+        try {
+            authClient.forgotPassword(dto);
+        } catch (FeignException e) {
+            throw new ResponseStatusException(
+                    HttpStatus.valueOf(e.status()),
+                    e.contentUTF8().isBlank() ? "Auth‐service error" : e.contentUTF8(),
+                    e);
+        }
     }
 
     private UbsResponse map(Ubs u) {

@@ -1,5 +1,6 @@
 package MedMap.service;
 
+import MedMap.dto.ForgotPasswordRequest;
 import MedMap.exception.InvalidCredentialsException;
 import MedMap.exception.UserAlreadyExistsException;
 import MedMap.model.User;
@@ -38,8 +39,18 @@ public class AuthService {
         if (!passwordEncoder.matches(password, user.getHashedPassword())) {
             throw new InvalidCredentialsException("CNES ou senha inválidos");
         }
-
-        // Aqui passamos o CNES e o ID do usuário (que será o ubsId no token)
         return tokenService.generateToken(user.getCnes(), user.getId());
+    }
+
+    /** NOVO: altera senha se CNES+nomeUbs estiverem corretos */
+    public String forgotPassword(ForgotPasswordRequest req) {
+        User user = userRepository.findByCnes(req.getCnes())
+                .orElseThrow(() -> new InvalidCredentialsException("UBS não encontrada ou dados inválidos"));
+        if (!user.getNomeUbs().equals(req.getNomeUbs())) {
+            throw new InvalidCredentialsException("Dados de UBS inválidos");
+        }
+        user.setHashedPassword(passwordEncoder.encode(req.getNewPassword()));
+        userRepository.save(user);
+        return "Senha atualizada com sucesso!";
     }
 }
