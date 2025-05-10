@@ -1,10 +1,14 @@
 package Medmap.Ubs_Microservico.controller;
 
-import Medmap.Ubs_Microservico.dto.*;
+import Medmap.Ubs_Microservico.dto.MedicamentoDTO;
+import Medmap.Ubs_Microservico.dto.UbsRequest;
+import Medmap.Ubs_Microservico.dto.UbsResponse;
+import Medmap.Ubs_Microservico.dto.UbsUpdateRequest;
 import Medmap.Ubs_Microservico.service.UbsService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -17,7 +21,6 @@ public class UbsController {
         this.service = service;
     }
 
-    // POST /ubs é público – não há necessidade de token
     @PostMapping
     public ResponseEntity<UbsResponse> create(@Valid @RequestBody UbsRequest body) {
         return ResponseEntity.ok(service.create(body));
@@ -39,7 +42,6 @@ public class UbsController {
         return service.update(cnes, body);
     }
 
-    /* Integração com Medicamento‑service */
     @GetMapping("/{cnes}/medicamentos")
     public List<MedicamentoDTO> listMeds(@PathVariable String cnes) {
         return service.listarMedicamentosDaUbs(cnes);
