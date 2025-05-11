@@ -8,16 +8,19 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-/**
- * Configurações de segurança da aplicação.
- */
+import java.util.List;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -28,58 +31,56 @@ public class SecurityConfig {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
-    /**
-     * AuthenticationEntryPoint personalizado que retorna 401 se a autenticação for exigida e não for fornecida.
-     */
     @Bean
     public AuthenticationEntryPoint customAuthenticationEntryPoint() {
         return (request, response, authException) ->
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Acesso não autorizado");
     }
 
-    /**
-     * Configura o filtro de segurança e as autorizações.
-     *
-     * @param http Objeto HttpSecurity.
-     * @return Cadeia de filtros de segurança configurada.
-     * @throws Exception Em caso de erro na configuração.
-     */
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration cfg = new CorsConfiguration();
+        cfg.setAllowedOriginPatterns(List.of("*"));
+        cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        cfg.setAllowedHeaders(List.of("*"));
+        cfg.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource src = new UrlBasedCorsConfigurationSource();
+        src.registerCorsConfiguration("/**", cfg);
+        return src;
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(new AntPathRequestMatcher("/auth/**")).permitAll()
                         .requestMatchers(
+                                new AntPathRequestMatcher("/auth/**"),
                                 new AntPathRequestMatcher("/swagger-ui/**"),
                                 new AntPathRequestMatcher("/v3/api-docs/**"),
-                                new AntPathRequestMatcher("/swagger-ui.html"),
                                 new AntPathRequestMatcher("/h2-console/**")
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(customAuthenticationEntryPoint()))
+                // substitua "headers().frameOptions().sameOrigin()" pelo lambda abaixo:
                 .headers(headers -> headers
-                        .frameOptions(frameOptions -> frameOptions.sameOrigin())
+                        .frameOptions(frame -> frame.sameOrigin())
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    /**
-     * Exibe o gerenciador de autenticação.
-     *
-     * @param configuration Configuração de autenticação.
-     * @return Gerenciador de autenticação.
-     * @throws Exception Em caso de erro na configuração.
-     */
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
-        return configuration.getAuthenticationManager();
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration cfg) throws Exception {
+        return cfg.getAuthenticationManager();
     }
 }
