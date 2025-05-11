@@ -36,7 +36,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public CorsConfigurationSource corsSource() {
+    public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cfg = new CorsConfiguration();
         cfg.setAllowedOriginPatterns(List.of("*"));
         cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
@@ -49,31 +49,32 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwt) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http,
+                                           JwtAuthenticationFilter jwt) throws Exception {
 
         if (openEverything) {
-            http.csrf(csrf -> csrf.disable())
-                    .cors(cors -> cors.configurationSource(corsSource()))
+            http
+                    .csrf(csrf -> csrf.disable())
+                    .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                     .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
             return http.build();
         }
 
-        // Rotas públicas do Swagger (considerando o context‑path)
-        String SWAGGER_UI = ctx + "/swagger-ui/**";
+        // Caminhos públicos do Swagger (considerando context-path)
+        String SWAGGER_UI      = ctx + "/swagger-ui/**";
         String SWAGGER_UI_HTML = ctx + "/swagger-ui.html";
-        String API_DOCS = ctx + "/v3/api-docs/**";
-        String API_DOCS_ROOT = ctx + "/v3/api-docs";
-        String SWAGGER_CONFIG = ctx + "/v3/api-docs/swagger-config";
+        String API_DOCS        = ctx + "/v3/api-docs/**";
+        String API_DOCS_ROOT   = ctx + "/v3/api-docs";
+        String SWAGGER_CONFIG  = ctx + "/v3/api-docs/swagger-config";
 
-        http.cors(cors -> cors.configurationSource(corsSource()))
+        http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(SWAGGER_UI, SWAGGER_UI_HTML, API_DOCS, API_DOCS_ROOT, SWAGGER_CONFIG)
                         .permitAll()
-                        // Permite registro (POST /ubs) e consulta (GET /ubs/**) sem token
                         .requestMatchers(HttpMethod.POST, "/ubs").permitAll()
                         .requestMatchers(HttpMethod.GET, "/ubs/**").permitAll()
-                        // Outros endpoints exigirão autenticação
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(customEntryPoint()))
