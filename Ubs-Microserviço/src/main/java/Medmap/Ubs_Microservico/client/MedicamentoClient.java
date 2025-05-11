@@ -15,8 +15,8 @@ import java.util.List;
 public interface MedicamentoClient {
 
     /**
-     * GET /medicamento?ubs={cnes}
+     * GET /medicamento?ubs={ubsId}
      */
     @GetMapping(value = "/medicamento", params = "ubs")
-    List<MedicamentoDTO> listByUbs(@RequestParam("ubs") String cnes);
+    List<MedicamentoDTO> listByUbs(@RequestParam("ubs") Long ubsId);
 }

@@ -42,18 +42,19 @@ public class UbsService {
         if (repo.existsByCnes(req.cnes()))
             throw new ResourceAlreadyExistsException("CNES já cadastrado");
 
-        var body = new HashMap<String, Object>();
+        var body = new HashMap<String,Object>();
         body.put("nomeUbs", req.nome());
-        body.put("cnes",    req.cnes());
-        body.put("password",req.senha());
+        body.put("cnes",     req.cnes());
+        body.put("password", req.senha());
 
         try {
             authClient.registerUbs(body);
         } catch (FeignException e) {
             throw new ResponseStatusException(
                     HttpStatus.valueOf(e.status()),
-                    e.contentUTF8().isBlank() ? "Auth‐service error" : e.contentUTF8(),
-                    e);
+                    e.contentUTF8().isBlank() ? "Auth-service error" : e.contentUTF8(),
+                    e
+            );
         }
 
         Ubs ubs = new Ubs();
@@ -77,10 +78,12 @@ public class UbsService {
     @Transactional
     public UbsResponse update(String cnes, UbsUpdateRequest req) {
         String tokenCnes = (String) SecurityContextHolder.getContext()
-                .getAuthentication().getPrincipal();
+                .getAuthentication()
+                .getPrincipal();
         if (!cnes.equals(tokenCnes)) {
             throw new AccessDeniedException("Não é permitido alterar outra UBS");
         }
+
         Ubs ubs = repo.findByCnes(cnes)
                 .orElseThrow(() -> new ResourceNotFoundException("UBS não encontrada"));
         ubs.setNome(req.nome());
@@ -89,10 +92,14 @@ public class UbsService {
     }
 
     /**
-     * Chama o medicamento-service para listar só os da UBS lógica.
+     * Lista apenas os medicamentos cadastrados pela UBS (pelo seu ID).
      */
     public List<MedicamentoDTO> listarMedicamentosDaUbs(String cnes) {
-        return medicamentoClient.listByUbs(cnes);
+        Ubs ubs = repo.findByCnes(cnes)
+                .orElseThrow(() -> new ResourceNotFoundException("UBS não encontrada"));
+
+        Long ubsId = ubs.getId();
+        return medicamentoClient.listByUbs(ubsId);
     }
 
     /**
@@ -109,8 +116,9 @@ public class UbsService {
         } catch (FeignException e) {
             throw new ResponseStatusException(
                     HttpStatus.valueOf(e.status()),
-                    e.contentUTF8().isBlank() ? "Auth‐service error" : e.contentUTF8(),
-                    e);
+                    e.contentUTF8().isBlank() ? "Auth-service error" : e.contentUTF8(),
+                    e
+            );
         }
     }
 

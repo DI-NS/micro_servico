@@ -20,7 +20,7 @@ public class MedicamentoService {
 
     @Transactional
     public Medicamento create(Medicamento m) {
-        // verifica duplicado dentro da mesma UBS
+        // mantém validação de duplicado dentro da mesma UBS
         repo.findByNomeAndInformacoesAndUbsId(
                 m.getNome(),
                 m.getInformacoes(),
@@ -40,6 +40,20 @@ public class MedicamentoService {
         return l;
     }
 
+    /**
+     * NOVO: busca só os remédios cadastrados pela UBS passada
+     */
+    public List<Medicamento> findByUbsId(Long ubsId) {
+        var l = repo.findAllByUbsId(ubsId);
+        if (l.isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Nenhum medicamento encontrado para essa UBS"
+            );
+        }
+        return l;
+    }
+
     public Medicamento findById(Long id) {
         return repo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -52,7 +66,7 @@ public class MedicamentoService {
     public Medicamento update(Long id, Medicamento m) {
         Medicamento existing = findById(id);
 
-        // opcional: barrar conflito se trocar nome/informações dentro da mesma UBS
+        // barrar conflito se trocar nome/informações dentro da mesma UBS
         if (!existing.getNome().equals(m.getNome())
                 || !existing.getInformacoes().equals(m.getInformacoes())) {
 
@@ -70,7 +84,7 @@ public class MedicamentoService {
         existing.setInformacoes(m.getInformacoes());
         existing.setImagemUrl(m.getImagemUrl());
         existing.setAtivo(m.isAtivo());
-        // não alteramos o ubsId no update — mantemos quem cadastrou originalmente
+        // ubsId não é alterado aqui
         return repo.save(existing);
     }
 
