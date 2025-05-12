@@ -40,6 +40,11 @@ public class UbsController {
         return service.update(cnes, body);
     }
 
+    @GetMapping("/id/{id}")
+    public UbsResponse getById(@PathVariable Long id) {
+        return service.getById(id);
+    }
+
     @GetMapping("/{cnes}/medicamentos")
     public List<MedicamentoDTO> listMeds(@PathVariable String cnes) {
         return service.listarMedicamentosDaUbs(cnes);

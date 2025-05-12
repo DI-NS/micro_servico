@@ -68,6 +68,11 @@ public class UbsService {
     public List<UbsResponse> listAll() {
         return repo.findAll().stream().map(this::map).toList();
     }
+    public UbsResponse getById(Long id) {
+        Ubs ubs = repo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("UBS não encontrada"));
+        return map(ubs);
+    }
 
     public UbsResponse getByCnes(String cnes) {
         Ubs ubs = repo.findByCnes(cnes)

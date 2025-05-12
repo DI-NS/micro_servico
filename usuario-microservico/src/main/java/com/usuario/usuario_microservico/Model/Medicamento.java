@@ -10,4 +10,7 @@ public class Medicamento {
     private String imagemUrl;
     private boolean ativo;
     private Long ubsId;
+    private String ubsCnes;
+    private String ubsNome;
+    private String ubsEndereco;
 }
