@@ -23,13 +23,23 @@ public class MedicamentoController {
     public Medicamento createMedicamento(@RequestBody Medicamento medicamento,
                                          Authentication auth) {
         Long tokenUbsId = (Long) auth.getCredentials();
-        // força o ubsId do token:
+        // força o ubsId do token
         medicamento.setUbsId(tokenUbsId);
         return service.create(medicamento);
     }
 
+    /**
+     * Agora aceita opcionalmente ?ubs={ubsId} para filtrar:
+     * - se vier ubs, retorna só desta UBS
+     * - se não, retorna tudo
+     */
     @GetMapping
-    public List<Medicamento> getAllMedicamento() {
+    public List<Medicamento> getAllMedicamento(
+            @RequestParam(name = "ubs", required = false) Long ubsId
+    ) {
+        if (ubsId != null) {
+            return service.findByUbsId(ubsId);
+        }
         return service.findAll();
     }
 
@@ -47,7 +57,6 @@ public class MedicamentoController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "Só é permitido atualizar medicamentos da sua UBS");
         }
-        // garante coerência
         medicamento.setUbsId(tokenUbsId);
         return service.update(id, medicamento);
     }
@@ -56,7 +65,6 @@ public class MedicamentoController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteMedicamento(@PathVariable Long id,
                                   Authentication auth) {
-        // opcional: poderia buscar o medicamento antes e checar o ubsId do token
         service.delete(id);
     }
 }
