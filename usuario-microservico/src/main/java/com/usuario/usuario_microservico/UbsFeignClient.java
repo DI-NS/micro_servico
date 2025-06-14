@@ -10,20 +10,14 @@ import org.springframework.web.bind.annotation.PathVariable;
  * A URL base vem de application.properties: ubs-service.url=http://localhost:8083
  */
 @FeignClient(name = "ubs-client",
-        url = "${ubs-service.url}",
-        path = "/ubs")
+        url  = "${ubs-service.url}",
+        path = "/ubs")      // aqui já puxa o /ubs
 public interface UbsFeignClient {
 
-    /**
-     * Busca UBS pelo CNES (String).
-     */
-    @GetMapping("/ubs/{cnes}")
-    UbsInfoDTO getByCnes(@PathVariable("cnes") String cnes);
+    @GetMapping("/{cnes}")        // → https://…/ubs/{cnes}
+    UbsInfoDTO getByCnes(@PathVariable String cnes);
 
-    /**
-     * Busca UBS pelo ID (Long).
-     * Você precisa expor no UBS-service um endpoint GET /ubs/id/{id}.
-     */
-    @GetMapping("/ubs/id/{id}")
-    UbsInfoDTO getById(@PathVariable("id") Long id);
+    @GetMapping("/id/{id}")       // → https://…/ubs/id/{id}
+    UbsInfoDTO getById(@PathVariable Long id);
 }
+
