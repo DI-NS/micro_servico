@@ -29,7 +29,7 @@ services:
 
   ubs-service:
     build:
-      context: ./Ubs-Microserviço
+      context: ./Ubs-Microservico
       dockerfile: Dockerfile
     ports:
       - "8083:8083"

@@ -7,9 +7,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 
-@FeignClient(name = "medicamento-microservico", url = "http://localhost:8080/medicamento")
+@FeignClient(name = "medicamento-client", url = "${medicamento.service.url}")
 public interface MedicamentoFeignClient {
-
     @GetMapping
     List<Medicamento> getAllMedicamentos();
 
