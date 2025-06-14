@@ -1,3 +1,4 @@
+version: "3.8"
 services:
   auth-service:
     build:
@@ -38,8 +39,10 @@ services:
       - SPRING_DATASOURCE_USERNAME=postgres.zapxzqrggnsqgbfjvtrl
       - SPRING_DATASOURCE_PASSWORD=MedmapParaUbs
       - SERVER_PORT=8083
-      - AUTH_SERVICE_URL=http://auth-service:8081
-      - MEDICAMENTO_SERVICE_URL=http://medicamento-service:8080
+      # Agora o UBS chama o Auth no Render:
+      - AUTH_SERVICE_URL=https://auth-m70u.onrender.com
+      # E também chama o medicamento no Render:
+      - MEDICAMENTO_SERVICE_URL=https://medicamento.onrender.com
       - JWT_SECRET=UmSegredoMuitoForte12345678901234567890123456789012
       - JWT_EXPIRATION=3600
 
@@ -51,4 +54,7 @@ services:
       - "8082:8082"
     environment:
       - SERVER_PORT=8082
-      - UBS_SERVICE_URL=http://ubs-service:8083
+      # Usuário chama o UBS e o Medicamento já no Render:
+      - UBS_SERVICE_URL=https://ubs-1nba.onrender.com
+      - MEDICAMENTO_SERVICE_URL=https://medicamento.onrender.com
+
