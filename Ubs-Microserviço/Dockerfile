@@ -13,6 +13,6 @@ RUN mvn clean package -Dmaven.test.skip=true -B
 # Runtime image
 FROM eclipse-temurin:17-jdk-jammy
 WORKDIR /app
-COPY --from=build /app/target/usuario-microservico-0.0.1-SNAPSHOT.jar app.jar
-EXPOSE 8082
+COPY --from=build /app/target/*.jar app.jar
+EXPOSE 8083
 CMD ["java","-jar","app.jar"]

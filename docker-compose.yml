@@ -1,0 +1,54 @@
+services:
+  auth-service:
+    build:
+      context: ./Auth-service
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://aws-0-sa-east-1.pooler.supabase.com:6543/postgres?prepareThreshold=0
+      - SPRING_DATASOURCE_USERNAME=postgres.ywbgudfuknwbrkbbeqyd
+      - SPRING_DATASOURCE_PASSWORD=MedmapParaUbs
+      - SERVER_PORT=8081
+      - JWT_SECRET=UmSegredoMuitoForte12345678901234567890123456789012
+      - JWT_EXPIRATION=3600
+
+  medicamento-service:
+    build:
+      context: ./medicamento-microservico
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://aws-0-sa-east-1.pooler.supabase.com:6543/postgres
+      - SPRING_DATASOURCE_USERNAME=postgres.zapxzqrggnsqgbfjvtrl
+      - SPRING_DATASOURCE_PASSWORD=MedmapParaUbs
+      - SERVER_PORT=8080
+      - JWT_SECRET=UmSegredoMuitoForte12345678901234567890123456789012
+      - JWT_EXPIRATION=3600
+
+  ubs-service:
+    build:
+      context: ./Ubs-Microserviço
+      dockerfile: Dockerfile
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://aws-0-sa-east-1.pooler.supabase.com:6543/postgres?prepareThreshold=0
+      - SPRING_DATASOURCE_USERNAME=postgres.zapxzqrggnsqgbfjvtrl
+      - SPRING_DATASOURCE_PASSWORD=MedmapParaUbs
+      - SERVER_PORT=8083
+      - AUTH_SERVICE_URL=http://auth-service:8081
+      - MEDICAMENTO_SERVICE_URL=http://medicamento-service:8080
+      - JWT_SECRET=UmSegredoMuitoForte12345678901234567890123456789012
+      - JWT_EXPIRATION=3600
+
+  usuario-service:
+    build:
+      context: ./usuario-microservico
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    environment:
+      - SERVER_PORT=8082
+      - UBS_SERVICE_URL=http://ubs-service:8083

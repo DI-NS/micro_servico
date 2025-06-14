@@ -1,25 +1,18 @@
-# Use uma imagem base com Maven para compilar o projeto
-FROM eclipse-temurin:17-jdk-jammy AS build
-
-# Instala Maven e define o diretório de trabalho
+# Build with Maven image
+FROM maven:3.9.0-eclipse-temurin-17 AS build
 WORKDIR /app
 
-# Copia os arquivos do projeto para o container
-COPY . .
+# Cache dependencies
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
 
-# Roda o Maven para compilar o projeto e gerar o JAR
-RUN ./mvnw clean package -DskipTests
+# Copy source & package
+COPY src/ src/
+RUN mvn clean package -DskipTests -B
 
-# Fase final: usar apenas o JAR gerado
+# Runtime image
 FROM eclipse-temurin:17-jdk-jammy
-
 WORKDIR /app
-
-# Copia o JAR gerado na fase anterior para a imagem final
 COPY --from=build /app/target/MedMap-0.0.1-SNAPSHOT.jar app.jar
-
-# Exponha a porta que o serviço irá utilizar
 EXPOSE 8081
-
-# Define o comando para rodar o JAR
-CMD ["java", "-jar", "app.jar"]
+CMD ["java","-jar","app.jar"]
